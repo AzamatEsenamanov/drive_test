@@ -47,12 +47,14 @@ public class TestController {
 
         model.addAttribute("question", firstQuestion);
         model.addAttribute("answers", firstAnswers);
-        model.addAttribute("currentIndex", 0); // ✅ this is the fix
+        model.addAttribute("currentIndex", 0);
         model.addAttribute("totalQuestions", questions.size());
         model.addAttribute("testId", id);
+        model.addAttribute("progress", 0); // ✅ Initialize progress explicitly
 
         return "take_test";
     }
+
 
 
     @PostMapping("/submit")
