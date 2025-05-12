@@ -106,43 +106,44 @@ public class TestController {
             @RequestParam Long answerId,
             @RequestParam int currentIndex,
             Model model,
-                HttpSession session) {
+            HttpSession session) {
 
+        // Get all questions for the test
         List<Question> questions = questionRepo.findByTestId(testId);
         Question currentQuestion = questions.get(currentIndex);
         Answer selected = answerRepo.findById(answerId).orElse(null);
 
+        // Load session score or initialize
         int score = session.getAttribute("score") != null ? (int) session.getAttribute("score") : 0;
-        if (selected != null && selected.isCorrect()) {
-            score++;
-            model.addAttribute("feedback", "✅ Correct!");
-            model.addAttribute("correct", true);
-        } else {
-            model.addAttribute("feedback", "❌ Incorrect.");
-            model.addAttribute("correct", false);
-        }
 
+        // Determine correctness
+        boolean isCorrect = selected != null && selected.isCorrect();
+        if (isCorrect) score++;
         session.setAttribute("score", score);
 
-        int nextIndex = currentIndex + 1;
-        if (nextIndex >= questions.size()) {
-            model.addAttribute("score", score);
-            model.addAttribute("total", questions.size());
-            return "result"; // final page
-        }
+        // Get all answers to this question
+        List<Answer> allAnswers = answerRepo.findByQuestionId(currentQuestion.getId());
 
-        Question nextQuestion = questions.get(nextIndex);
-        List<Answer> nextAnswers = answerRepo.findByQuestionId(nextQuestion.getId());
+        // Find correct answer ID
+        Long correctAnswerId = allAnswers.stream()
+                .filter(Answer::isCorrect)
+                .map(Answer::getId)
+                .findFirst()
+                .orElse(null);
 
-        model.addAttribute("question", nextQuestion);
-        model.addAttribute("answers", nextAnswers);
-        model.addAttribute("currentIndex", nextIndex);
-        model.addAttribute("totalQuestions", questions.size());
+        model.addAttribute("question", currentQuestion);
+        model.addAttribute("answers", allAnswers);
         model.addAttribute("testId", testId);
+        model.addAttribute("currentIndex", currentIndex);
+        model.addAttribute("totalQuestions", questions.size());
+
+        model.addAttribute("feedback", isCorrect ? "✅ Correct!" : "❌ Incorrect.");
+        model.addAttribute("correct", isCorrect);
+        model.addAttribute("correctAnswerId", correctAnswerId);
+        model.addAttribute("showNext", false); // Will be toggled in frontend JS
 
         return "take_test";
     }
-
 
 }
 
