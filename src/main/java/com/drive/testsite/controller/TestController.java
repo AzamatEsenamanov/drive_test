@@ -103,10 +103,11 @@ public class TestController {
     public String submitQuestion(
             @PathVariable Long testId,
             @RequestParam Long questionId,
-            @RequestParam(required = false) Long answerId,  // <-- make it optional
+            @RequestParam(required = false) Long answerId,
             @RequestParam int currentIndex,
             Model model,
             HttpSession session) {
+
 
         List<Question> questions = questionRepo.findByTestId(testId);
         Question currentQuestion = questions.get(currentIndex);
@@ -140,6 +141,7 @@ public class TestController {
         model.addAttribute("correct", isCorrect);
         model.addAttribute("correctAnswerId", correctAnswerId);
         model.addAttribute("showNext", false);
+        model.addAttribute("selectedAnswerId", answerId);
 
         return "take_test";
     }
