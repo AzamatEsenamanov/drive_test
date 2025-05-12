@@ -53,18 +53,44 @@ public class TestController {
         int score = 0;
         int total = 0;
 
+        Map<Long, Long> selectedAnswerIds = new HashMap<>(); // Question ID → Selected Answer ID
+        Map<Long, Boolean> correctness = new HashMap<>();     // Question ID → was correct
+
         for (String key : params.keySet()) {
             if (key.startsWith("q_")) {
+                Long qId = Long.parseLong(key.substring(2));
                 Long answerId = Long.parseLong(params.get(key));
+                selectedAnswerIds.put(qId, answerId);
+
                 Answer ans = answerRepo.findById(answerId).orElse(null);
-                if (ans != null && ans.isCorrect()) score++;
+                if (ans != null && ans.isCorrect()) {
+                    score++;
+                    correctness.put(qId, true);
+                } else {
+                    correctness.put(qId, false);
+                }
                 total++;
             }
         }
 
         model.addAttribute("score", score);
         model.addAttribute("total", total);
+        model.addAttribute("selected", selectedAnswerIds);
+        model.addAttribute("correctness", correctness);
+
+        // send all questions + answers again
+        Long testId = Long.parseLong(params.get("testId"));
+        List<Question> questions = questionRepo.findByTestId(testId);
+        Map<Long, List<Answer>> answers = new HashMap<>();
+        for (Question q : questions) {
+            answers.put(q.getId(), answerRepo.findByQuestionId(q.getId()));
+        }
+
+        model.addAttribute("questions", questions);
+        model.addAttribute("answers", answers);
+
         return "result";
     }
+
 }
 

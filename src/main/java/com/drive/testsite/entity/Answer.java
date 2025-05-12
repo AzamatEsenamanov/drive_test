@@ -5,6 +5,13 @@ import jakarta.persistence.*;
 @Entity
 public class Answer {
 
+    public Answer(Long id, String text, boolean isCorrect, Question question) {
+        this.id = id;
+        this.text = text;
+        this.isCorrect = isCorrect;
+        this.question = question;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

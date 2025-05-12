@@ -1,9 +1,27 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>Result</title></head>
+<head>
+    <title>Test Result</title>
+    <style>
+        .correct { color: green; font-weight: bold; }
+        .wrong { color: red; }
+    </style>
+</head>
 <body>
-<h2>Your Score</h2>
+<h2>Test Results</h2>
 <p th:text="'Score: ' + ${score} + ' / ' + ${total}"></p>
-<a href="/">Go back</a>
+
+<div th:each="q : ${questions}">
+    <p><strong th:text="${q.text}"></strong></p>
+    <ul>
+        <li th:each="a : ${answers[q.id]}"
+            th:classappend="${a.id} == ${selected[q.id]} ? (${a.correct} ? 'correct' : 'wrong') : (${a.correct} ? 'correct' : '')"
+            th:text="${a.text}">
+        </li>
+    </ul>
+    <br/>
+</div>
+
+<a href="/">Back to Home</a>
 </body>
 </html>
