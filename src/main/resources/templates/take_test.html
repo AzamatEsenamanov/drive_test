@@ -60,7 +60,6 @@
         <form th:action="@{/test/{testId}/question(testId=${testId})}" method="post" class="d-inline">
             <input type="hidden" name="currentIndex" th:value="${currentIndex + 1}" />
             <input type="hidden" name="questionId" th:value="${question.id}" />
-            <input type="hidden" name="answerId" th:value="${selectedAnswerId}" />
             <button id="nextBtn" type="submit" class="btn btn-success mt-2">Next Question</button>
         </form>
 
