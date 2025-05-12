@@ -56,7 +56,9 @@
             </ul>
         </div>
 
-        <button id="showBtn" class="btn btn-outline-info mt-2" onclick="showCorrect()">Show Correct Answer</button>
+        <button id="showBtn" class="btn btn-outline-info mt-2"
+                th:if="${selectedAnswerId != null}"
+                onclick="showCorrect()">Show Correct Answer</button>
         <form th:action="@{/test/{testId}/question(testId=${testId})}" method="post" class="d-inline">
             <input type="hidden" name="currentIndex" th:value="${currentIndex + 1}" />
             <input type="hidden" name="questionId" th:value="${question.id}" />
