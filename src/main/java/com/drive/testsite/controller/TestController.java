@@ -103,49 +103,43 @@ public class TestController {
     public String submitQuestion(
             @PathVariable Long testId,
             @RequestParam Long questionId,
-            @RequestParam Long answerId,
+            @RequestParam(required = false) Long answerId,  // <-- make it optional
             @RequestParam int currentIndex,
             Model model,
             HttpSession session) {
 
-        // Get all questions for the test
         List<Question> questions = questionRepo.findByTestId(testId);
         Question currentQuestion = questions.get(currentIndex);
-        Answer selected = answerRepo.findById(answerId).orElse(null);
-
-        // Load session score or initialize
-        int score = session.getAttribute("score") != null ? (int) session.getAttribute("score") : 0;
-
-        // Determine correctness
-        boolean isCorrect = selected != null && selected.isCorrect();
-        if (isCorrect) score++;
-        session.setAttribute("score", score);
-
-        // Get all answers to this question
         List<Answer> allAnswers = answerRepo.findByQuestionId(currentQuestion.getId());
 
-        // Find correct answer ID
+        boolean isCorrect = false;
+        if (answerId != null) {
+            Answer selected = answerRepo.findById(answerId).orElse(null);
+            isCorrect = selected != null && selected.isCorrect();
+            if (isCorrect) {
+                int score = session.getAttribute("score") != null ? (int) session.getAttribute("score") : 0;
+                session.setAttribute("score", ++score);
+            }
+        }
+
         Long correctAnswerId = allAnswers.stream()
                 .filter(Answer::isCorrect)
                 .map(Answer::getId)
                 .findFirst()
                 .orElse(null);
 
-        // Calculate progress percentage
         int progress = (int) (((currentIndex + 1) * 100.0) / questions.size());
 
-        // Populate model
         model.addAttribute("question", currentQuestion);
         model.addAttribute("answers", allAnswers);
         model.addAttribute("testId", testId);
         model.addAttribute("currentIndex", currentIndex);
         model.addAttribute("totalQuestions", questions.size());
         model.addAttribute("progress", progress);
-
-        model.addAttribute("feedback", isCorrect ? "✅ Correct!" : "❌ Incorrect.");
+        model.addAttribute("feedback", answerId == null ? "❌ No answer selected." : (isCorrect ? "✅ Correct!" : "❌ Incorrect."));
         model.addAttribute("correct", isCorrect);
         model.addAttribute("correctAnswerId", correctAnswerId);
-        model.addAttribute("showNext", false); // Will be toggled in frontend JS
+        model.addAttribute("showNext", false);
 
         return "take_test";
     }
