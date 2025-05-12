@@ -131,11 +131,16 @@ public class TestController {
                 .findFirst()
                 .orElse(null);
 
+        // Calculate progress percentage
+        int progress = (int) (((currentIndex + 1) * 100.0) / questions.size());
+
+        // Populate model
         model.addAttribute("question", currentQuestion);
         model.addAttribute("answers", allAnswers);
         model.addAttribute("testId", testId);
         model.addAttribute("currentIndex", currentIndex);
         model.addAttribute("totalQuestions", questions.size());
+        model.addAttribute("progress", progress);
 
         model.addAttribute("feedback", isCorrect ? "✅ Correct!" : "❌ Incorrect.");
         model.addAttribute("correct", isCorrect);

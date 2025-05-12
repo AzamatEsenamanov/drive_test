@@ -17,7 +17,7 @@
         <h3>Question <span th:text="${currentIndex + 1}"></span> of <span th:text="${totalQuestions}"></span></h3>
         <div class="progress w-50">
             <div class="progress-bar" role="progressbar"
-                 th:style="'width: ' + ((currentIndex + 1) * 100 / totalQuestions) + '%'"
+                 th:style="'width: ' + ${progress} + '%'"
                  th:text="((currentIndex + 1) * 100 / totalQuestions) + '%'">
             </div>
         </div>
