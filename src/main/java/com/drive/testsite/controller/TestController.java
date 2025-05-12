@@ -38,16 +38,22 @@ public class TestController {
     @GetMapping("/test/{id}")
     public String takeTest(@PathVariable Long id, Model model) {
         List<Question> questions = questionRepo.findByTestId(id);
-        Map<Long, List<Answer>> answers = new HashMap<>();
-        for (Question q : questions) {
-            answers.put(q.getId(), answerRepo.findByQuestionId(q.getId()));
+        if (questions.isEmpty()) {
+            return "error"; // or show message
         }
 
+        Question firstQuestion = questions.get(0);
+        List<Answer> firstAnswers = answerRepo.findByQuestionId(firstQuestion.getId());
+
+        model.addAttribute("question", firstQuestion);
+        model.addAttribute("answers", firstAnswers);
+        model.addAttribute("currentIndex", 0); // ✅ this is the fix
+        model.addAttribute("totalQuestions", questions.size());
         model.addAttribute("testId", id);
-        model.addAttribute("questions", questions);
-        model.addAttribute("answers", answers);
+
         return "take_test";
     }
+
 
     @PostMapping("/submit")
     public String submitAnswers(@RequestParam Map<String, String> params, Model model) {
