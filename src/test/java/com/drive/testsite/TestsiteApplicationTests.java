@@ -1,4 +1,4 @@
-package com.example.testsite;
+package com.drive.testsite;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
