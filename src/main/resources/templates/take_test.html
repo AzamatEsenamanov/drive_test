@@ -10,7 +10,7 @@
         <div class="card-body">
             <h4 class="card-title text-primary mb-4">Question [[${currentIndex + 1}]] of [[${totalQuestions}]]</h4>
 
-            <form action="/test/${testId}/question" method="post">
+            <form th:action="@{'/test/' + ${testId} + '/question'}" method="post">
                 <input type="hidden" name="questionId" th:value="${question.id}" />
                 <input type="hidden" name="currentIndex" th:value="${currentIndex}" />
                 <div class="mb-3">
