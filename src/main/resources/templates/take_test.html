@@ -18,9 +18,10 @@
         <div class="progress w-50">
             <div class="progress-bar" role="progressbar"
                  th:style="'width: ' + ${progress} + '%'"
-                 th:text="((currentIndex + 1) * 100 / totalQuestions) + '%'">
+                 th:text="${progress + '%'}">
             </div>
         </div>
+
     </div>
 
     <form th:action="@{/test/{testId}/question(testId=${testId})}" method="post">
