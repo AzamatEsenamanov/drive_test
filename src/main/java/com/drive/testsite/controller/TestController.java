@@ -112,6 +112,13 @@ public class TestController {
 
 
         List<Question> questions = questionRepo.findByTestId(testId);
+        // ✅ Prevent IndexOutOfBounds
+        if (currentIndex >= questions.size()) {
+            int finalScore = session.getAttribute("score") != null ? (int) session.getAttribute("score") : 0;
+            model.addAttribute("score", finalScore);
+            model.addAttribute("total", questions.size());
+            return "result"; // Redirect to result page
+        }
         Question currentQuestion = questions.get(currentIndex);
         List<Answer> allAnswers = answerRepo.findByQuestionId(currentQuestion.getId());
 
