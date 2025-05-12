@@ -5,6 +5,7 @@ import com.drive.testsite.entity.Question;
 import com.drive.testsite.repositary.AnswerRepository;
 import com.drive.testsite.repositary.QuestionRepository;
 import com.drive.testsite.repositary.TestRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -91,6 +92,51 @@ public class TestController {
 
         return "result";
     }
+
+    @PostMapping("/test/{testId}/question")
+    public String submitQuestion(
+            @PathVariable Long testId,
+            @RequestParam Long questionId,
+            @RequestParam Long answerId,
+            @RequestParam int currentIndex,
+            Model model,
+                HttpSession session) {
+
+        List<Question> questions = questionRepo.findByTestId(testId);
+        Question currentQuestion = questions.get(currentIndex);
+        Answer selected = answerRepo.findById(answerId).orElse(null);
+
+        int score = session.getAttribute("score") != null ? (int) session.getAttribute("score") : 0;
+        if (selected != null && selected.isCorrect()) {
+            score++;
+            model.addAttribute("feedback", "✅ Correct!");
+            model.addAttribute("correct", true);
+        } else {
+            model.addAttribute("feedback", "❌ Incorrect.");
+            model.addAttribute("correct", false);
+        }
+
+        session.setAttribute("score", score);
+
+        int nextIndex = currentIndex + 1;
+        if (nextIndex >= questions.size()) {
+            model.addAttribute("score", score);
+            model.addAttribute("total", questions.size());
+            return "result"; // final page
+        }
+
+        Question nextQuestion = questions.get(nextIndex);
+        List<Answer> nextAnswers = answerRepo.findByQuestionId(nextQuestion.getId());
+
+        model.addAttribute("question", nextQuestion);
+        model.addAttribute("answers", nextAnswers);
+        model.addAttribute("currentIndex", nextIndex);
+        model.addAttribute("totalQuestions", questions.size());
+        model.addAttribute("testId", testId);
+
+        return "take_test";
+    }
+
 
 }
 
