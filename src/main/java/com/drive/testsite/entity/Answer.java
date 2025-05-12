@@ -5,8 +5,11 @@ import jakarta.persistence.*;
 @Entity
 public class Answer {
 
-    public Answer(Long id, String text, boolean isCorrect, Question question) {
-        this.id = id;
+    public Answer() {
+        // ✅ Default constructor required by JPA
+    }
+
+    public Answer(String text, boolean isCorrect, Question question) {
         this.text = text;
         this.isCorrect = isCorrect;
         this.question = question;
@@ -24,7 +27,6 @@ public class Answer {
     @JoinColumn(name = "question_id")
     private Question question;
 
-    // ✅ Getter & Setter for id
     public Long getId() {
         return id;
     }
@@ -33,7 +35,6 @@ public class Answer {
         this.id = id;
     }
 
-    // ✅ Getter & Setter for text
     public String getText() {
         return text;
     }
@@ -42,7 +43,6 @@ public class Answer {
         this.text = text;
     }
 
-    // ✅ Getter & Setter for isCorrect
     public boolean isCorrect() {
         return isCorrect;
     }
@@ -51,7 +51,6 @@ public class Answer {
         isCorrect = correct;
     }
 
-    // ✅ Getter & Setter for question
     public Question getQuestion() {
         return question;
     }
