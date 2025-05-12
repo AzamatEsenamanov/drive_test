@@ -141,7 +141,13 @@ public class TestController {
         model.addAttribute("correct", isCorrect);
         model.addAttribute("correctAnswerId", correctAnswerId);
         model.addAttribute("showNext", false);
-        model.addAttribute("selectedAnswerId", answerId);
+        if (answerId != null) {
+            // this was a submission, not a next-click
+            model.addAttribute("selectedAnswerId", answerId);
+        } else {
+            // reset for new question
+            model.addAttribute("selectedAnswerId", null);
+        }
 
         return "take_test";
     }
