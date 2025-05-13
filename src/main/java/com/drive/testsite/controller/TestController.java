@@ -38,7 +38,11 @@ public class TestController {
     }
 
     @GetMapping("/")
-    public String listTests(Model model) {
+    public String home(HttpSession session, Model model) {
+        if (session.getAttribute("loggedInUser") == null) {
+            return "redirect:/register";
+        }
+
         model.addAttribute("tests", testRepo.findAll());
         return "test_list";
     }
@@ -123,6 +127,20 @@ public class TestController {
         return "redirect:/";
     }
 
+    @GetMapping("/register")
+    public String showRegisterForm() {
+        return "register"; // → loads register.html
+    }
+
+    @GetMapping("/login")
+    public String showLoginForm() {
+        return "login"; // → loads login.html
+    }
+
+    @GetMapping("/verify")
+    public String showVerifyPage() {
+        return "verify"; // → loads verify.html
+    }
 
 
     @PostMapping("/submit")
