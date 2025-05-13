@@ -36,13 +36,17 @@ public class TestController {
 
     @GetMapping("/")
     public String home(HttpSession session, Model model) {
-        if (session.getAttribute("loggedInUser") == null) {
-            return "redirect:/login";
-        }
+        Long userId = (Long) session.getAttribute("loggedInUser");
+        if (userId == null) return "redirect:/login";
+
+        User user = userRepo.findById(userId).orElse(null);
+        if (user == null) return "redirect:/login";
+        if (!user.isPaid()) return "redirect:/pay";
 
         model.addAttribute("tests", testRepo.findAll());
         return "test_list";
     }
+
 
     @GetMapping("/login")
     public String showLoginForm() {
@@ -236,4 +240,25 @@ public class TestController {
 
         return "take_test";
     }
+
+    @GetMapping("/pay")
+    public String showPayPage(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) {
+            return "redirect:/login";
+        }
+        return "pay";
+    }
+
+    @GetMapping("/payment/success")
+    public String paymentSuccess(HttpSession session) {
+        Long userId = (Long) session.getAttribute("loggedInUser");
+        if (userId != null) {
+            userRepo.findById(userId).ifPresent(user -> {
+                user.setPaid(true);
+                userRepo.save(user);
+            });
+        }
+        return "redirect:/";
+    }
+
 }
