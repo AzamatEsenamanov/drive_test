@@ -2,10 +2,14 @@ package com.drive.testsite.controller;
 
 import com.drive.testsite.entity.Answer;
 import com.drive.testsite.entity.Question;
+import com.drive.testsite.entity.User;
 import com.drive.testsite.repositary.AnswerRepository;
 import com.drive.testsite.repositary.QuestionRepository;
 import com.drive.testsite.repositary.TestRepository;
+import com.drive.testsite.repositary.UserRepository;
+import com.drive.testsite.service.MailService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,20 +17,24 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class TestController {
     private final TestRepository testRepo;
     private final QuestionRepository questionRepo;
     private final AnswerRepository answerRepo;
+    private final UserRepository userRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
-    public TestController(TestRepository testRepo, QuestionRepository questionRepo, AnswerRepository answerRepo) {
+    public TestController(TestRepository testRepo, QuestionRepository questionRepo, AnswerRepository answerRepo, UserRepository userRepository, PasswordEncoder passwordEncoder, MailService mailService) {
         this.testRepo = testRepo;
         this.questionRepo = questionRepo;
         this.answerRepo = answerRepo;
+        this.userRepo = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.mailService = mailService;
     }
 
     @GetMapping("/")
@@ -53,6 +61,66 @@ public class TestController {
         model.addAttribute("progress", 0); // ✅ Initialize progress explicitly
 
         return "take_test";
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestParam String username,
+                           @RequestParam String email,
+                           @RequestParam String phone,
+                           @RequestParam String password) {
+
+        if (userRepo.findByEmail(email).isPresent()) {
+            return "redirect:/register?error=email_taken";
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setPassword(passwordEncoder.encode(password));  // Add password encoder!
+        user.setPaid(false);
+        userRepo.save(user);
+        return "redirect:/login?success";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String emailOrUsername,
+                        @RequestParam String password,
+                        HttpSession session) {
+
+        Optional<User> optional = userRepo.findByEmail(emailOrUsername);
+        if (optional.isEmpty()) {
+            optional = userRepo.findByUsername(emailOrUsername);
+        }
+
+        if (optional.isEmpty()) return "redirect:/login?error=not_found";
+
+        User user = optional.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return "redirect:/login?error=wrong_password";
+        }
+
+        String code = String.valueOf(new Random().nextInt(899999) + 100000); // 6-digit
+        user.setVerificationCode(code);
+        userRepo.save(user);
+
+        mailService.send2FACode(user.getEmail(), code);
+
+        session.setAttribute("authUserId", user.getId());
+        return "redirect:/verify";
+    }
+    @PostMapping("/verify")
+    public String verifyCode(@RequestParam String code, HttpSession session) {
+        Long userId = (Long) session.getAttribute("authUserId");
+        if (userId == null) return "redirect:/login";
+
+        User user = userRepo.findById(userId).orElse(null);
+        if (user == null || !code.equals(user.getVerificationCode())) {
+            return "redirect:/verify?error=invalid";
+        }
+
+        session.setAttribute("loggedInUser", user.getId());
+        return "redirect:/";
     }
 
 
