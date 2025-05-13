@@ -12,10 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -40,31 +37,26 @@ public class TestController {
     @GetMapping("/")
     public String home(HttpSession session, Model model) {
         if (session.getAttribute("loggedInUser") == null) {
-            return "redirect:/register";
+            return "redirect:/login";
         }
 
         model.addAttribute("tests", testRepo.findAll());
         return "test_list";
     }
 
-    @GetMapping("/test/{id}")
-    public String takeTest(@PathVariable Long id, Model model) {
-        List<Question> questions = questionRepo.findByTestId(id);
-        if (questions.isEmpty()) {
-            return "error"; // or show message
-        }
+    @GetMapping("/login")
+    public String showLoginForm() {
+        return "login";
+    }
 
-        Question firstQuestion = questions.get(0);
-        List<Answer> firstAnswers = answerRepo.findByQuestionId(firstQuestion.getId());
+    @GetMapping("/register")
+    public String showRegisterForm() {
+        return "register";
+    }
 
-        model.addAttribute("question", firstQuestion);
-        model.addAttribute("answers", firstAnswers);
-        model.addAttribute("currentIndex", 0);
-        model.addAttribute("totalQuestions", questions.size());
-        model.addAttribute("testId", id);
-        model.addAttribute("progress", 0); // ✅ Initialize progress explicitly
-
-        return "take_test";
+    @GetMapping("/verify")
+    public String showVerifyPage() {
+        return "verify";
     }
 
     @PostMapping("/register")
@@ -81,7 +73,7 @@ public class TestController {
         user.setUsername(username);
         user.setEmail(email);
         user.setPhone(phone);
-        user.setPassword(passwordEncoder.encode(password));  // Add password encoder!
+        user.setPassword(passwordEncoder.encode(password));
         user.setPaid(false);
         userRepo.save(user);
         return "redirect:/login?success";
@@ -104,7 +96,7 @@ public class TestController {
             return "redirect:/login?error=wrong_password";
         }
 
-        String code = String.valueOf(new Random().nextInt(899999) + 100000); // 6-digit
+        String code = String.valueOf(new Random().nextInt(899999) + 100000);
         user.setVerificationCode(code);
         userRepo.save(user);
 
@@ -113,6 +105,7 @@ public class TestController {
         session.setAttribute("authUserId", user.getId());
         return "redirect:/verify";
     }
+
     @PostMapping("/verify")
     public String verifyCode(@RequestParam String code, HttpSession session) {
         Long userId = (Long) session.getAttribute("authUserId");
@@ -127,29 +120,33 @@ public class TestController {
         return "redirect:/";
     }
 
-    @GetMapping("/register")
-    public String showRegisterForm() {
-        return "register"; // → loads register.html
-    }
+    @GetMapping("/test/{id}")
+    public String takeTest(@PathVariable Long id, Model model) {
+        List<Question> questions = questionRepo.findByTestId(id);
+        if (questions.isEmpty()) {
+            return "error";
+        }
 
-    @GetMapping("/login")
-    public String showLoginForm() {
-        return "login"; // → loads login.html
-    }
+        Question firstQuestion = questions.get(0);
+        List<Answer> firstAnswers = answerRepo.findByQuestionId(firstQuestion.getId());
 
-    @GetMapping("/verify")
-    public String showVerifyPage() {
-        return "verify"; // → loads verify.html
-    }
+        model.addAttribute("question", firstQuestion);
+        model.addAttribute("answers", firstAnswers);
+        model.addAttribute("currentIndex", 0);
+        model.addAttribute("totalQuestions", questions.size());
+        model.addAttribute("testId", id);
+        model.addAttribute("progress", 0);
 
+        return "take_test";
+    }
 
     @PostMapping("/submit")
     public String submitAnswers(@RequestParam Map<String, String> params, Model model) {
         int score = 0;
         int total = 0;
 
-        Map<Long, Long> selectedAnswerIds = new HashMap<>(); // Question ID → Selected Answer ID
-        Map<Long, Boolean> correctness = new HashMap<>();     // Question ID → was correct
+        Map<Long, Long> selectedAnswerIds = new HashMap<>();
+        Map<Long, Boolean> correctness = new HashMap<>();
 
         for (String key : params.keySet()) {
             if (key.startsWith("q_")) {
@@ -173,7 +170,6 @@ public class TestController {
         model.addAttribute("selected", selectedAnswerIds);
         model.addAttribute("correctness", correctness);
 
-        // send all questions + answers again
         Long testId = Long.parseLong(params.get("testId"));
         List<Question> questions = questionRepo.findByTestId(testId);
         Map<Long, List<Answer>> answers = new HashMap<>();
@@ -196,15 +192,14 @@ public class TestController {
             Model model,
             HttpSession session) {
 
-
         List<Question> questions = questionRepo.findByTestId(testId);
-        // ✅ Prevent IndexOutOfBounds
         if (currentIndex >= questions.size()) {
             int finalScore = session.getAttribute("score") != null ? (int) session.getAttribute("score") : 0;
             model.addAttribute("score", finalScore);
             model.addAttribute("total", questions.size());
-            return "result"; // Redirect to result page
+            return "result";
         }
+
         Question currentQuestion = questions.get(currentIndex);
         List<Answer> allAnswers = answerRepo.findByQuestionId(currentQuestion.getId());
 
@@ -236,16 +231,9 @@ public class TestController {
         model.addAttribute("correct", isCorrect);
         model.addAttribute("correctAnswerId", correctAnswerId);
         model.addAttribute("showNext", false);
-        if (answerId != null) {
-            // this was a submission, not a next-click
-            model.addAttribute("selectedAnswerId", answerId);
-        } else {
-            // reset for new question
-            model.addAttribute("selectedAnswerId", null);
-        }
+
+        model.addAttribute("selectedAnswerId", answerId);
 
         return "take_test";
     }
-
 }
-
