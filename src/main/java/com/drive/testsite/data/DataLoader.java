@@ -11,13 +11,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataLoaderFull implements CommandLineRunner {
+public class DataLoader implements CommandLineRunner {
 
     private final TestRepository testRepo;
     private final QuestionRepository questionRepo;
     private final AnswerRepository answerRepo;
 
-    public DataLoaderFull(TestRepository testRepo, QuestionRepository questionRepo, AnswerRepository answerRepo) {
+    public DataLoader(TestRepository testRepo, QuestionRepository questionRepo, AnswerRepository answerRepo) {
         this.testRepo = testRepo;
         this.questionRepo = questionRepo;
         this.answerRepo = answerRepo;
